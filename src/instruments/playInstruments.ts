@@ -1,7 +1,7 @@
 import { Instrument } from "../atoms";
 import { basicDrumKit, basicSynth, bassSynth, chordSynth } from ".";
 
-const selectedSquares = (instrument: Instrument, beat: number) => {
+const selectedSquares = (instrument: Instrument, beat: number | null) => {
   return instrument.grid.filter((square) => {
     if (square.col === beat) return true;
   }).map((square) => {
@@ -12,7 +12,7 @@ const selectedSquares = (instrument: Instrument, beat: number) => {
   })
 };
 
-export const playInstruments = (instruments: Instrument[], beat: number) => {
+export const playInstruments = (instruments: Instrument[], beat: number | null) => {
 
   // Drum Kit
   const drumNotes = selectedSquares(instruments[0], beat);

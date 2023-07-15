@@ -9,36 +9,20 @@ import React, {
   MouseEvent,
 } from "react";
 
-const scheduledIdAtom = atom<number | null>(null);
-const stopCountAtom = atom<number | null>(null);
+const handleBeatAtom = atom(
+  null,
+  (get, set, update: number | null) => set(beatAtom, update)
+)
 
 export function Play() {
-  const [, setBeat] = useAtom(beatAtom);
-  const [scheduledId, setScheduledId] = useAtom(scheduledIdAtom);
-  const [, setStopCount] = useAtom(stopCountAtom);
+  const [, setBeat] = useAtom(handleBeatAtom);
 
   return (
     <button
       onClick={async () => {
         await Tone.start();
-        if (scheduledId) {
-          Tone.Transport.clear(scheduledId);
-          setScheduledId(null);
-        }
-        Tone.Transport.stop();
-        setBeat(null);
-        setStopCount(null);
-        const newScheduledId = Tone.Transport.scheduleRepeat(() => {
-          setBeat((beat) => {
-            if (beat === null || beat === 15) {
-              return 0;
-            } else {
-              return beat + 1;
-            }
-          });
-        }, "8n");
-        setScheduledId(newScheduledId);
         Tone.Transport.start("+0.1");
+        setBeat(0);
       }}
     >
       <svg
@@ -60,20 +44,13 @@ export function Play() {
 }
 
 export function Stop() {
-  const [, setBeat] = useAtom(beatAtom);
-  const [scheduledId, setScheduledId] = useAtom(scheduledIdAtom);
-  const [stopCount, setStopCount] = useAtom(stopCountAtom);
+  const [, setBeat] = useAtom(handleBeatAtom);
 
   return (
     <button
       onClick={() => {
-        if (scheduledId) {
-          Tone.Transport.clear(scheduledId);
-          setScheduledId(null);
-        }
+        Tone.Transport.stop();
         setBeat(null);
-        Tone.Transport.cancel();
-        setStopCount(null);
       }}
     >
       <svg
@@ -102,8 +79,6 @@ interface ITapTempoState {
 }
 
 export function Tempo() {
-  // scheduleId
-  const [scheduledId] = useAtom(scheduledIdAtom);
   // Initialize state for tap times, display BPM and mouse hold status
   const [state, setState] = useState<ITapTempoState>({
     tapTimes: [0, 0, 0, 0, 0],
@@ -117,12 +92,12 @@ export function Tempo() {
   const handleTap = async () => {
     // If the transport is not running, start it. This is so we can set the BPM
     // before playing the notes/beats.
-    if (!scheduledId) {
+    if (Tone.Transport.state !== "started") {
       await Tone.start();
       Tone.Transport.start();
     }
     // Get the current time
-    const now = Tone.now();
+    const now = Tone.context.currentTime;
 
     // Shift the array to remove the oldest tap and add the newest one
     const newTapTimes = [...state.tapTimes.slice(1), now];

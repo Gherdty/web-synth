@@ -1,6 +1,8 @@
 import { atom } from 'jotai';
 
 export const beatAtom = atom<number | null>(null);
+export const scheduledIdAtom = atom<number | null>(null);
+export const stopCountAtom = atom<number | null>(null);
 
 export interface Instrument {
   name: string;
